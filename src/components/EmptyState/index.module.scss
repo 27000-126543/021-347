@@ -1,0 +1,67 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.iconWrap {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(30, 111, 255, 0.08) 0%, rgba(74, 135, 255, 0.12) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-lg;
+}
+
+.icon {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.desc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 $spacing-xl;
+  margin-bottom: $spacing-xl;
+}
+
+.actionBtn {
+  @include button-reset;
+  height: $button-height-md;
+  padding: 0 48rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  box-shadow: 0 4rpx 16rpx rgba(30, 111, 255, 0.25);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.secondaryBtn {
+  @extend .actionBtn;
+  background: #fff;
+  color: $color-primary;
+  border: 2rpx solid $color-primary;
+  box-shadow: none;
+}

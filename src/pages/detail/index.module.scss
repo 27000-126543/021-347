@@ -1,0 +1,471 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 32rpx $page-padding 60rpx $page-padding;
+}
+
+.locationTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1.2;
+  margin-bottom: 12rpx;
+}
+
+.projectSub {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  margin-bottom: 20rpx;
+}
+
+.tagGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.mainCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: -40rpx $page-padding $spacing-md $page-padding;
+  box-shadow: $shadow-float;
+  position: relative;
+  z-index: 2;
+}
+
+.missingSection {
+  background-color: $color-missing-bg;
+  border-left: 6rpx solid $color-missing;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.missingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.missingTitle {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-missing;
+}
+
+.missingIcon {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background-color: $color-missing;
+  color: #fff;
+  font-size: 24rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-right: 8rpx;
+  font-weight: 700;
+}
+
+.completeLink {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.missingFields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.missingField {
+  padding: 8rpx 20rpx;
+  background-color: #fff;
+  color: $color-missing;
+  border: 1rpx solid $color-missing;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.infoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.infoItem {
+  width: calc((100% - #{$spacing-md}) / 2);
+  min-width: 0;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 6rpx;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  @include text-ellipsis;
+}
+
+.fullInfoItem {
+  width: 100%;
+}
+
+.sectionCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md $page-padding;
+  box-shadow: $shadow-card;
+}
+
+.textBlock {
+  padding: $spacing-md;
+  background-color: $color-bg-page;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.6;
+}
+
+.textBlockOriginal {
+  @extend .textBlock;
+  border-left: 6rpx solid $color-text-tertiary;
+  background-color: rgba(134, 144, 156, 0.06);
+}
+
+.textBlockProblem {
+  @extend .textBlock;
+  border-left: 6rpx solid $color-warning;
+  background-color: $color-warning-bg;
+}
+
+.textBlockSolution {
+  @extend .textBlock;
+  border-left: 6rpx solid $color-success;
+  background-color: $color-success-bg;
+}
+
+.photoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.photoItem {
+  width: calc((100% - 24rpx) / 3);
+  aspect-ratio: 4 / 3;
+  border-radius: $radius-md;
+  overflow: hidden;
+  position: relative;
+  background-color: $color-bg-section;
+}
+
+.photoImage {
+  width: 100%;
+  height: 100%;
+}
+
+.photoRemark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8rpx 12rpx;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%);
+  color: #fff;
+  font-size: $font-size-xs;
+  @include text-ellipsis;
+}
+
+.photoAddBtn {
+  @extend .photoItem;
+  border: 2rpx dashed $color-border;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-bg-hover;
+}
+
+.photoAddIcon {
+  font-size: 48rpx;
+  color: $color-primary;
+  line-height: 1;
+}
+
+.photoAddText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 0;
+}
+
+.metaLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.metaValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.qrCard {
+  background: linear-gradient(135deg, rgba(30, 111, 255, 0.08) 0%, rgba(74, 135, 255, 0.04) 100%);
+  border: 2rpx solid rgba(30, 111, 255, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md $page-padding;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.qrLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.qrBox {
+  width: 200rpx;
+  height: 200rpx;
+  background-color: #fff;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-md;
+  padding: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.qrPattern {
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(135deg, #1D2129 25%, transparent 25%),
+    linear-gradient(225deg, #1D2129 25%, transparent 25%),
+    linear-gradient(45deg, #1D2129 25%, transparent 25%),
+    linear-gradient(315deg, #1D2129 25%, transparent 25%);
+  background-size: 16rpx 16rpx;
+  background-position: 0 0, 8rpx 0, 8rpx -8rpx, 0 8rpx;
+  opacity: 0.9;
+}
+
+.qrCenter {
+  position: absolute;
+  width: 56rpx;
+  height: 56rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #fff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.qrCode {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  margin-top: 8rpx;
+  font-weight: $font-weight-semibold;
+}
+
+.qrRight {
+  flex: 1;
+  min-width: 0;
+}
+
+.qrTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.3;
+  margin-bottom: 8rpx;
+}
+
+.qrDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-md;
+}
+
+.qrActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.qrBtn {
+  @include button-reset;
+  height: 56rpx;
+  padding: 0 20rpx;
+  background-color: #fff;
+  color: $color-primary;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.qrBtnPrimary {
+  @extend .qrBtn;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+  border: none;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.editRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.editRowHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.editLabel {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.editMissingTag {
+  margin-left: 12rpx;
+  padding: 4rpx 12rpx;
+  background-color: $color-missing-bg;
+  color: $color-missing;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.editInput {
+  min-height: 80rpx;
+  padding: 0 24rpx;
+  background-color: $color-bg-page;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  transition: all $transition-base;
+
+  &:active,
+  &:focus {
+    border-color: $color-primary;
+    background-color: #fff;
+  }
+}
+
+.editInputMissing {
+  @extend .editInput;
+  border-color: rgba(245, 63, 63, 0.5);
+  background-color: $color-missing-bg;
+}
+
+.editTextarea {
+  @extend .editInput;
+  min-height: 140rpx;
+  padding: 16rpx 24rpx;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16rpx $page-padding calc(16rpx + env(safe-area-inset-bottom)) $page-padding;
+  background-color: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  display: flex;
+  gap: $spacing-md;
+}
+
+.secondaryBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background-color: $color-bg-hover;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border;
+  transition: all $transition-base;
+
+  &:active {
+    background-color: $color-bg-section;
+    transform: scale(0.99);
+  }
+}
+
+.primaryBtn {
+  @include button-reset;
+  flex: 2;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 6rpx 20rpx rgba(30, 111, 255, 0.25);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.92;
+    transform: scale(0.99);
+  }
+}

@@ -1,0 +1,222 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+}
+
+.header {
+  position: relative;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 48rpx $page-padding 100rpx $page-padding;
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.titleGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+.pageTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1.2;
+  margin-bottom: 8rpx;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  height: 76rpx;
+  padding: 0 28rpx;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: $radius-button;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.searchIcon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+  color: $color-text-tertiary;
+}
+
+.searchInput {
+  flex: 1;
+  height: 100%;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.searchInput::placeholder {
+  color: $color-text-tertiary;
+}
+
+.statsCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  margin: -60rpx $page-padding $spacing-md $page-padding;
+  padding: $spacing-lg;
+  box-shadow: $shadow-float;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  z-index: 2;
+}
+
+.statItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1rpx;
+    background-color: $color-divider;
+  }
+}
+
+.statNum {
+  font-size: 52rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.1;
+  margin-bottom: 8rpx;
+}
+
+.statNumWarn {
+  @extend .statNum;
+  color: $color-warning;
+}
+
+.statNumOk {
+  @extend .statNum;
+  color: $color-success;
+}
+
+.statLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: $spacing-sm $page-padding $spacing-md $page-padding;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tabItem {
+  @include button-reset;
+  height: 64rpx;
+  padding: 0 28rpx;
+  background-color: $color-bg-card;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+  flex-shrink: 0;
+  transition: all $transition-base;
+  display: inline-flex;
+}
+
+.tabActive {
+  @extend .tabItem;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 4rpx 12rpx rgba(30, 111, 255, 0.25);
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: $radius-round;
+  font-size: 20rpx;
+  margin-left: 8rpx;
+  font-weight: 600;
+}
+
+.listSection {
+  padding: 0 $page-padding;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md 0 $spacing-sm 0;
+}
+
+.sectionTitleText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.sectionCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.fab {
+  position: fixed;
+  right: 36rpx;
+  bottom: calc(180rpx + env(safe-area-inset-bottom));
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  box-shadow: 0 10rpx 32rpx rgba(30, 111, 255, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.95);
+    box-shadow: 0 6rpx 20rpx rgba(30, 111, 255, 0.35);
+  }
+}
+
+.fabIcon {
+  font-size: 56rpx;
+  color: $color-text-white;
+  line-height: 1;
+  margin-bottom: 2rpx;
+}
+
+.fabText {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+  line-height: 1;
+}

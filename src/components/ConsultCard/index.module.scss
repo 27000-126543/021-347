@@ -1,0 +1,153 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.locationRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.locationText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-right: $spacing-sm;
+}
+
+.projectText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.problemText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
+  @include text-ellipsis-multi(2);
+  margin-bottom: $spacing-md;
+}
+
+.tagRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: $spacing-md;
+}
+
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  overflow: hidden;
+}
+
+.photoItem {
+  width: 140rpx;
+  height: 100rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: $color-bg-section;
+}
+
+.photoImage {
+  width: 100%;
+  height: 100%;
+}
+
+.photoMore {
+  width: 140rpx;
+  height: 100rpx;
+  border-radius: $radius-md;
+  background-color: rgba(30, 111, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.creatorInfo {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.creatorAvatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.creatorName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.timeText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.missingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  background-color: $color-error-bg;
+  color: $color-error;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  margin-left: 8rpx;
+  font-weight: $font-weight-medium;
+}

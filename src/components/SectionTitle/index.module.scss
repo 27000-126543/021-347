@@ -1,0 +1,65 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg 0 $spacing-md 0;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.indicator {
+  width: 8rpx;
+  height: 32rpx;
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 4rpx;
+  margin-right: $spacing-sm;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.3;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-left: $spacing-sm;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.required {
+  color: $color-error;
+  font-size: $font-size-md;
+  margin-left: 4rpx;
+}
+
+.missingCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40rpx;
+  height: 40rpx;
+  padding: 0 12rpx;
+  background-color: $color-error-bg;
+  color: $color-error;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  margin-left: $spacing-sm;
+}
