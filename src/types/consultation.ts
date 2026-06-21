@@ -28,6 +28,7 @@ export type MissingField =
 export interface ConsultationPhoto {
   id: string
   url: string
+  base64?: string
   remark?: string
   uploadedAt: string
 }
@@ -42,10 +43,11 @@ export interface SharePayload {
   od: string
   sp: string
   sl: string
-  ph: Array<{ u: string; r?: string }>
+  ph: Array<{ u: string; b?: string; r?: string }>
   lt?: string
   by: string
   ct: string
+  mf?: string[]
 }
 
 export interface Consultation {

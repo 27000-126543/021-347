@@ -12,6 +12,7 @@ type FilterKey = MissingField | 'all'
 
 const FILTER_TABS: Array<{ key: FilterKey; label: string; icon: string }> = [
   { key: 'all', label: '全部缺项', icon: '⚠️' },
+  { key: 'photos', label: '缺现场照片', icon: '📷' },
   { key: 'contactNo', label: '缺联系单编号', icon: '📋' },
   { key: 'drawingNo', label: '缺图纸编号', icon: '📐' },
   { key: 'responsibleUnit', label: '缺责任单位', icon: '🏢' },
@@ -19,6 +20,7 @@ const FILTER_TABS: Array<{ key: FilterKey; label: string; icon: string }> = [
 ]
 
 const ICONS: Record<MissingField, string> = {
+  photos: '📷',
   contactNo: '📋',
   drawingNo: '📐',
   responsibleUnit: '🏢',
@@ -53,6 +55,7 @@ const DraftsPage: React.FC = () => {
 
   const missingStats = useMemo(() => {
     const counts: Record<MissingField, number> = {
+      photos: 0,
       contactNo: 0,
       drawingNo: 0,
       responsibleUnit: 0,
@@ -121,13 +124,17 @@ const DraftsPage: React.FC = () => {
         </View>
         <Text className={styles.headerSub}>
           共 <Text style={{ fontWeight: 700 }}>{draftList.length}</Text> 条草稿记录需要补全，
-          请逐项核对联系单编号、图纸编号、责任单位和预计工程量。
+          请逐项核对现场照片、联系单编号、图纸编号、责任单位和预计工程量。
         </Text>
       </View>
 
       <View className={styles.statsGrid}>
         {(Object.keys(missingStats) as MissingField[]).map(field => (
-          <View className={styles.statCard} key={field}>
+          <View
+            className={`${styles.statCard} ${field === 'photos' ? styles.statCardPhotos : ''}`}
+            key={field}
+            onClick={() => handleFilter(field)}
+          >
             <View className={styles.statIcon}>{ICONS[field]}</View>
             <View className={styles.statInfo}>
               <Text className={styles.statNum}>{missingStats[field]}</Text>

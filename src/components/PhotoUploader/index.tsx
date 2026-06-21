@@ -24,6 +24,23 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   tip = '建议从整体到局部拍摄，标注关键尺寸或冲突点。可拍摄最多9张照片。',
   showRemark = true
 }) => {
+  const readFileAsBase64 = useCallback(async (filePath: string): Promise<string> => {
+    try {
+      const fs = Taro.getFileSystemManager()
+      const res = fs.readFileSync(filePath, 'base64')
+      return `data:image/jpeg;base64,${res}`
+    } catch {
+      try {
+        const res = await Taro.request({ url: filePath, responseType: 'arraybuffer' })
+        const base64 = Taro.arrayBufferToBase64(res.data as ArrayBuffer)
+        return `data:image/jpeg;base64,${base64}`
+      } catch {
+        console.warn('[PhotoUploader] base64转储失败, 使用原URL:', filePath)
+        return ''
+      }
+    }
+  }, [])
+
   const handleAdd = useCallback(async () => {
     try {
       const res = await Taro.chooseImage({
@@ -31,17 +48,26 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         sizeType: ['compressed'],
         sourceType: ['album', 'camera']
       })
-      const newPhotos: ConsultationPhoto[] = res.tempFilePaths.map((url, i) => ({
+      const newPhotos: ConsultationPhoto[] = res.tempFilePaths.map((url) => ({
         id: generateId(),
         url,
+        base64: '',
         uploadedAt: new Date().toISOString()
       }))
       console.log('[PhotoUploader] 选择图片成功', { count: newPhotos.length })
       onChange([...photos, ...newPhotos])
+
+      for (let i = 0; i < newPhotos.length; i++) {
+        const b64 = await readFileAsBase64(res.tempFilePaths[i])
+        if (b64) {
+          newPhotos[i].base64 = b64
+          onChange([...photos, ...newPhotos])
+        }
+      }
     } catch (e) {
       console.error('[PhotoUploader] 选择图片失败', e)
     }
-  }, [photos, maxCount, onChange])
+  }, [photos, maxCount, onChange, readFileAsBase64])
 
   const handleDelete = useCallback((id: string, e) => {
     e.stopPropagation && e.stopPropagation()

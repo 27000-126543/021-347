@@ -6,7 +6,7 @@ import { useConsultation } from '@/store/consultationContext'
 import { StatusBadge, ProfessionalTag, ReasonTag } from '@/components/StatusBadge'
 import SectionTitle from '@/components/SectionTitle'
 import { formatDateFull, decodeSharePayload, restoreFromSharePayload } from '@/utils'
-import { Consultation } from '@/types/consultation'
+import { Consultation, MissingField, MISSING_FIELD_LABEL } from '@/types/consultation'
 
 type DisplaySource = 'url-data' | 'local-cache' | null
 
@@ -17,6 +17,8 @@ interface DisplayState {
   notFound: boolean
   loading: boolean
 }
+
+const HIDDEN_MISSING: MissingField[] = ['photos']
 
 const SharePage: React.FC = () => {
   const router = useRouter()
@@ -84,11 +86,53 @@ const SharePage: React.FC = () => {
 
   const { item, source, shareCode, notFound, loading } = displayState
 
+  const visibleMissingFields = useMemo(() => {
+    if (!item?.missingFields) return []
+    return item.missingFields.filter(f => !HIDDEN_MISSING.includes(f))
+  }, [item])
+
   const handlePreviewPhoto = (idx: number) => {
     if (!item?.photos) return
     Taro.previewImage({
       current: item.photos[idx].url,
       urls: item.photos.map(p => p.url)
+    })
+  }
+
+  const handleCopyMaterial = () => {
+    if (!item) return
+    const t = item as Consultation
+    const photoList = t.photos && t.photos.length > 0
+      ? t.photos.map((p, i) => `  ${i + 1}. ${p.remark || '现场照片'}`).join('\n')
+      : '  （暂无照片）'
+    const material =
+`【变更洽商联系单素材】
+项目：${t.projectName}
+位置：${t.buildingName} ${t.floorName}${t.locationText ? ' ' + t.locationText : ''}
+专业：${t.professional} | 变更原因：${t.changeReason}
+创建人：${t.createdBy} | 时间：${formatDateFull(t.createdAt)}
+
+【原图纸做法】
+${t.originalDrawing || '（未填写）'}
+
+【现场问题】
+${t.siteProblem || '（未填写）'}
+
+【建议做法】
+${t.suggestedSolution || '（未填写）'}
+
+【现场照片清单】
+${photoList}
+
+${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.map(f => MISSING_FIELD_LABEL[f]).join('、')}` : ''}
+共享码：${t.shareCode}`
+
+    Taro.setClipboardData({
+      data: material,
+      success: () => {
+        Taro.showToast({ title: '联系单素材已复制', icon: 'success', duration: 2000 })
+        console.log('[SharePage] 复制联系单素材成功')
+      }
     })
   }
 
@@ -254,6 +298,24 @@ const SharePage: React.FC = () => {
         </View>
       </View>
 
+      {visibleMissingFields.length > 0 && (
+        <View className={styles.missingBanner}>
+          <View className={styles.missingBannerTitle}>
+            ⚠️ 以下信息待施工员补齐（本页仅查看，不可修改）
+          </View>
+          <View className={styles.missingBannerList}>
+            {visibleMissingFields.map(f => (
+              <View className={styles.missingBannerItem} key={f}>
+                缺{MISSING_FIELD_LABEL[f]}
+              </View>
+            ))}
+          </View>
+          <Text className={styles.missingBannerTip}>
+            请联系施工员在 App 中补齐以上信息后再编制联系单
+          </Text>
+        </View>
+      )}
+
       <View className={styles.mainCard}>
         <View className={styles.infoGrid}>
           <View className={styles.infoItem}>
@@ -266,11 +328,27 @@ const SharePage: React.FC = () => {
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>联系单编号</View>
-            <View className={styles.infoValue}>{itemTyped.contactNo || '（未填写）'}</View>
+            <View className={`${styles.infoValue} ${!itemTyped.contactNo ? styles.infoMissing : ''}`}>
+              {itemTyped.contactNo || '待补'}
+            </View>
           </View>
           <View className={styles.infoItem}>
-            <View className={styles.infoLabel}>共享码</View>
-            <View className={styles.infoValue}>{itemTyped.shareCode}</View>
+            <View className={styles.infoLabel}>图纸编号</View>
+            <View className={`${styles.infoValue} ${!itemTyped.drawingNo ? styles.infoMissing : ''}`}>
+              {itemTyped.drawingNo || '待补'}
+            </View>
+          </View>
+          <View className={styles.infoItem}>
+            <View className={styles.infoLabel}>责任单位</View>
+            <View className={`${styles.infoValue} ${!itemTyped.responsibleUnit ? styles.infoMissing : ''}`}>
+              {itemTyped.responsibleUnit || '待补'}
+            </View>
+          </View>
+          <View className={styles.infoItem}>
+            <View className={styles.infoLabel}>预计工程量</View>
+            <View className={`${styles.infoValue} ${!itemTyped.estimatedQuantity ? styles.infoMissing : ''}`}>
+              {itemTyped.estimatedQuantity || '待补'}
+            </View>
           </View>
         </View>
       </View>
@@ -298,7 +376,7 @@ const SharePage: React.FC = () => {
               <View className={styles.photoItem} key={p.id} onClick={() => handlePreviewPhoto(i)}>
                 <Image
                   className={styles.photoImage}
-                  src={p.url}
+                  src={p.base64 || p.url}
                   mode='aspectFill'
                   onError={(e) => console.error('[SharePage] 图片加载失败', p.url, e)}
                 />
@@ -313,12 +391,18 @@ const SharePage: React.FC = () => {
         )}
       </View>
 
+      <View className={styles.actionBar}>
+        <Button className={styles.copyMaterialBtn} onClick={handleCopyMaterial}>
+          📋 一键复制联系单素材
+        </Button>
+      </View>
+
       <View className={styles.footerTip}>
         洽商共享由 {itemTyped.createdBy} 发起，共享码 {itemTyped.shareCode}
         {'\n'}
         {source === 'url-data' ? '本页面内容直接从链接解析，不依赖设备缓存' : '本页面内容从当前设备缓存读取'}
         {'\n'}
-        如需修改内容，请联系现场施工员在 App 内操作
+        本页为只读查看，如需修改请联系施工员在 App 内操作
       </View>
     </ScrollView>
   )

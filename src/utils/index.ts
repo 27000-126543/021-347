@@ -75,10 +75,15 @@ export const buildSharePayload = (item: Consultation): SharePayload => {
     od: item.originalDrawing || '',
     sp: item.siteProblem || '',
     sl: item.suggestedSolution || '',
-    ph: item.photos.map((p: ConsultationPhoto) => ({ u: p.url, r: p.remark })),
+    ph: item.photos.map((p: ConsultationPhoto) => ({
+      u: p.url,
+      b: p.base64 || '',
+      r: p.remark
+    })),
     lt: item.locationText,
     by: item.createdBy,
-    ct: item.createdAt
+    ct: item.createdAt,
+    mf: item.missingFields
   }
 }
 
@@ -96,15 +101,20 @@ export const restoreFromSharePayload = (payload: SharePayload): Partial<Consulta
     suggestedSolution: payload.sl,
     photos: payload.ph.map((p, i) => ({
       id: `share-${i}`,
-      url: p.u,
+      url: p.b || p.u,
+      base64: p.b,
       remark: p.r,
       uploadedAt: payload.ct
     })),
     locationText: payload.lt,
+    contactNo: '',
+    drawingNo: '',
+    responsibleUnit: '',
+    estimatedQuantity: '',
     createdBy: payload.by,
     createdAt: payload.ct,
     status: 'submitted',
-    missingFields: []
+    missingFields: (payload.mf || []) as MissingField[]
   }
 }
 
