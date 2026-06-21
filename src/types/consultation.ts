@@ -47,6 +47,10 @@ export interface SharePayload {
   lt?: string
   by: string
   ct: string
+  cn?: string
+  dn?: string
+  ru?: string
+  eq?: string
   mf?: string[]
 }
 

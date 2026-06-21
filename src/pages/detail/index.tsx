@@ -20,7 +20,7 @@ const DetailPage: React.FC = () => {
 
   const [item, setItem] = useState<Consultation>(initialItem)
   const [editMode, setEditMode] = useState(mode === 'complete' || false)
-
+  const [showSharePreview, setShowSharePreview] = useState(false)
   const [editContactNo, setEditContactNo] = useState(item.contactNo || '')
   const [editDrawingNo, setEditDrawingNo] = useState(item.drawingNo || '')
   const [editResponsibleUnit, setEditResponsibleUnit] = useState(item.responsibleUnit || '')
@@ -97,21 +97,7 @@ const DetailPage: React.FC = () => {
   }
 
   const handleShowQR = () => {
-    Taro.showModal({
-      title: '共享二维码',
-      content: `请让资料员或预算员扫描下方二维码，或输入共享码：${item.shareCode}\n\n链接：${buildShareUrl(item)}`,
-      confirmText: '复制链接',
-      cancelText: '知道了',
-      confirmColor: '#1E6FFF',
-      success: (res) => {
-        if (res.confirm) {
-          Taro.setClipboardData({
-            data: buildShareUrl(item),
-            success: () => Taro.showToast({ title: '链接已复制', icon: 'success' })
-          })
-        }
-      }
-    })
+    setShowSharePreview(true)
   }
 
   const handleSaveEdits = () => {
@@ -456,6 +442,96 @@ const DetailPage: React.FC = () => {
           </>
         )}
       </View>
+
+      {showSharePreview && (
+        <View className={styles.modalMask} onClick={() => setShowSharePreview(false)}>
+          <View className={styles.modalContainer} onClick={(e) => { e.stopPropagation && e.stopPropagation() }}>
+            <View className={styles.modalHeader}>
+              <Text className={styles.modalTitle}>📮 分享预览</Text>
+              <Button className={styles.modalClose} onClick={() => setShowSharePreview(false)}>×</Button>
+            </View>
+
+            <ScrollView scrollY className={styles.modalBody}>
+              <SectionTitle title='将带出去的字段' subtitle='共12项' showIndicator />
+              <View className={styles.shareFieldList}>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>🏗️</Text><Text className={styles.shareFieldText}>项目名称</Text><Text className={styles.shareFieldValue}>✓</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>🏢</Text><Text className={styles.shareFieldText}>楼栋·楼层·位置</Text><Text className={styles.shareFieldValue}>✓</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>🔧</Text><Text className={styles.shareFieldText}>专业 / 变更原因</Text><Text className={styles.shareFieldValue}>✓</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>📐</Text><Text className={styles.shareFieldText}>原图纸做法</Text><Text className={styles.shareFieldValue}>{item.originalDrawing ? '✓' : '（未填）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>⚠️</Text><Text className={styles.shareFieldText}>现场问题</Text><Text className={styles.shareFieldValue}>{item.siteProblem ? '✓' : '（未填）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>💡</Text><Text className={styles.shareFieldText}>建议做法</Text><Text className={styles.shareFieldValue}>{item.suggestedSolution ? '✓' : '（未填）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>📷</Text><Text className={styles.shareFieldText}>现场照片</Text><Text className={styles.shareFieldValue}>{item.photos.length > 0 ? `${item.photos.length}张` : '（未拍）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>📋</Text><Text className={styles.shareFieldText}>联系单编号</Text><Text className={styles.shareFieldValue}>{item.contactNo || '（待补）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>📐</Text><Text className={styles.shareFieldText}>图纸编号</Text><Text className={styles.shareFieldValue}>{item.drawingNo || '（待补）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>🏗️</Text><Text className={styles.shareFieldText}>责任单位</Text><Text className={styles.shareFieldValue}>{item.responsibleUnit || '（待补）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>📊</Text><Text className={styles.shareFieldText}>预计工程量</Text><Text className={styles.shareFieldValue}>{item.estimatedQuantity || '（待补）'}</Text></View>
+                <View className={styles.shareFieldItem}><Text className={styles.shareFieldIcon}>👷</Text><Text className={styles.shareFieldText}>创建人·时间</Text><Text className={styles.shareFieldValue}>✓</Text></View>
+              </View>
+
+              {missingTotal > 0 && (
+                <View className={styles.shareMissingBlock}>
+                  <View className={styles.shareMissingTitle}>
+                    ⚠️ 仍缺{missingTotal}项内容
+                  </View>
+                  <View className={styles.shareMissingList}>
+                    {missingFields.map(f => (
+                      <View className={styles.shareMissingTag} key={f}>
+                        缺{MISSING_FIELD_LABEL[f]}
+                      </View>
+                    ))}
+                  </View>
+                  <Text className={styles.shareMissingDesc}>
+                    分享后资料员看到也会显示"待补"标记，可直接联系施工员补齐。
+                  </Text>
+                </View>
+              )}
+
+              <SectionTitle title='链接说明' subtitle='无需后端' showIndicator />
+              <Text className={styles.shareUrlTip}>
+                所有内容已加密编码到URL中，资料员打开链接即可直读照片+三段文字+业务信息，不依赖任何后端服务器或当前设备缓存。
+              </Text>
+              <View className={styles.shareUrlPreview}>{buildShareUrl(item)}</View>
+
+              {item.photos.length > 0 && (
+                <>
+                  <SectionTitle title={`照片预览(${item.photos.length}张)`} subtitle='资料员看到即如此' showIndicator />
+                  <View className={styles.sharePhotoGrid}>
+                    {item.photos.slice(0, 9).map(p => (
+                      <Image
+                        key={p.id}
+                        className={styles.sharePhotoItem}
+                        src={p.base64 || p.url}
+                        mode='aspectFill'
+                      />
+                    ))}
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <View className={styles.modalFooter}>
+              <Button
+                className={styles.modalSecondaryBtn}
+                onClick={() => {
+                  setShowSharePreview(false)
+                  if (missingTotal > 0) setEditMode(true)
+                }}
+              >
+                {missingTotal > 0 ? `🔄 先补齐${missingTotal}项` : '取消'}
+              </Button>
+              <Button
+                className={styles.modalPrimaryBtn}
+                onClick={() => {
+                  setShowSharePreview(false)
+                  handleCopyShare()
+                }}
+              >
+                📨 生成分享并复制
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

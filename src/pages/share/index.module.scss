@@ -126,6 +126,59 @@
   line-height: 1.6;
 }
 
+.reviewCard {
+  margin: $spacing-md $page-padding 0 $page-padding;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.reviewTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.reviewCurrent {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-section;
+  border-radius: $radius-md;
+}
+
+.reviewIconCurrent {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.reviewHint {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.reviewBtnRow {
+  display: flex;
+  gap: 12rpx;
+  margin-top: $spacing-sm;
+}
+
+.reviewBtn {
+  @include button-reset;
+  flex: 1;
+  height: 72rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  border: 2rpx solid $color-primary;
+  @include flex-center;
+}
+
 .actionBar {
   margin: $spacing-md $page-padding;
 }
@@ -141,6 +194,60 @@
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   box-shadow: 0 4rpx 16rpx rgba($color-primary, 0.3);
+}
+
+.copyMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12rpx;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-float;
+  border: 2rpx solid $color-primary-bg;
+}
+
+.copyMenuBtnSimple,
+.copyMenuBtnFull {
+  @include button-reset;
+  @include flex-center;
+  width: 100%;
+  height: 88rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.copyMenuBtnSimple {
+  background-color: $color-accent-bg;
+  color: $color-accent;
+  border: 2rpx solid rgba($color-accent, 0.4);
+}
+
+.copyMenuBtnFull {
+  background-color: $color-primary-bg;
+  color: $color-primary;
+  border: 2rpx solid rgba($color-primary, 0.4);
+}
+
+.copyMenuHint {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  text-align: center;
+}
+
+.copyMenuCancel {
+  @include button-reset;
+  @include flex-center;
+  width: 100%;
+  height: 72rpx;
+  border-radius: $radius-button;
+  background-color: transparent;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+  border: 2rpx solid $color-border;
+  margin-top: 8rpx;
 }
 
 .sectionCard {

@@ -230,3 +230,35 @@
 .tipsText b {
   font-weight: $font-weight-semibold;
 }
+
+.modeSwitch {
+  display: flex;
+  gap: $spacing-sm;
+  margin: 0 $page-padding $spacing-md $page-padding;
+  padding: 6rpx;
+  background-color: $color-bg-card;
+  border-radius: $radius-button;
+  box-shadow: $shadow-card;
+}
+
+.modeBtn,
+.modeBtnActive {
+  @include button-reset;
+  @include flex-center;
+  flex: 1;
+  height: 64rpx;
+  border-radius: calc($radius-button - 6rpx);
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.modeBtn {
+  background-color: transparent;
+  color: $color-text-tertiary;
+}
+
+.modeBtnActive {
+  background-color: $color-primary;
+  color: #fff;
+  box-shadow: 0 2rpx 8rpx rgba($color-primary, 0.25);
+}

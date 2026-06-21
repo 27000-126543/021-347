@@ -9,6 +9,30 @@ import { formatDateFull, decodeSharePayload, restoreFromSharePayload } from '@/u
 import { Consultation, MissingField, MISSING_FIELD_LABEL } from '@/types/consultation'
 
 type DisplaySource = 'url-data' | 'local-cache' | null
+type ReviewStatus = 'viewed' | 'pending-supply' | 'ready'
+
+const REVIEW_STORAGE_KEY = 'shared_review_status_v1'
+const HIDDEN_MISSING: MissingField[] = ['photos']
+
+const REVIEW_OPTIONS: Array<{ key: ReviewStatus; label: string; color: string; icon: string; hint: string }> = [
+  { key: 'viewed', label: '已看', color: '#1E6FFF', icon: '👁️', hint: '已查看，未做判断' },
+  { key: 'pending-supply', label: '待补资料', color: '#F53F3F', icon: '📋', hint: '联系施工员补齐资料' },
+  { key: 'ready', label: '可整理联系单', color: '#00B42A', icon: '✅', hint: '信息完整，可出联系单' },
+]
+
+const loadReviewStatus = (): Record<string, ReviewStatus> => {
+  try {
+    const raw = Taro.getStorageSync(REVIEW_STORAGE_KEY)
+    if (raw && typeof raw === 'string') return JSON.parse(raw)
+  } catch { }
+  return {}
+}
+
+const saveReviewStatus = (data: Record<string, ReviewStatus>) => {
+  try {
+    Taro.setStorageSync(REVIEW_STORAGE_KEY, JSON.stringify(data))
+  } catch { }
+}
 
 interface DisplayState {
   item: Partial<Consultation> | null
@@ -17,8 +41,6 @@ interface DisplayState {
   notFound: boolean
   loading: boolean
 }
-
-const HIDDEN_MISSING: MissingField[] = ['photos']
 
 const SharePage: React.FC = () => {
   const router = useRouter()
@@ -29,6 +51,8 @@ const SharePage: React.FC = () => {
 
   const [manualCode, setManualCode] = useState('')
   const [searchTrigger, setSearchTrigger] = useState(0)
+  const [reviewMap, setReviewMap] = useState<Record<string, ReviewStatus>>(() => loadReviewStatus())
+  const [showCopyMenu, setShowCopyMenu] = useState(false)
 
   useEffect(() => {
     console.log('[SharePage] mounted, urlShareCode=', urlShareCode, 'dataLen=', urlData.length)
@@ -38,7 +62,6 @@ const SharePage: React.FC = () => {
     const activeShareCode = searchTrigger > 0
       ? manualCode.trim().toUpperCase()
       : urlShareCode.trim().toUpperCase()
-
     const activeData = searchTrigger > 0 ? null : urlData
 
     if (activeData && activeData.length > 20) {
@@ -46,7 +69,6 @@ const SharePage: React.FC = () => {
       if (payload) {
         const restored = restoreFromSharePayload(payload)
         if (restored.shareCode?.toUpperCase() === activeShareCode) {
-          console.log('[SharePage] 从URL data解析成功', activeShareCode)
           return {
             item: restored,
             source: 'url-data',
@@ -64,7 +86,6 @@ const SharePage: React.FC = () => {
 
     const found = getByShareCode(activeShareCode)
     if (found) {
-      console.log('[SharePage] 从本地缓存查到', activeShareCode)
       return {
         item: found,
         source: 'local-cache',
@@ -74,7 +95,6 @@ const SharePage: React.FC = () => {
       }
     }
 
-    console.log('[SharePage] 未找到', activeShareCode)
     return {
       item: null,
       source: null,
@@ -85,11 +105,27 @@ const SharePage: React.FC = () => {
   }, [urlShareCode, urlData, manualCode, searchTrigger, getByShareCode])
 
   const { item, source, shareCode, notFound, loading } = displayState
+  const currentReviewStatus = shareCode ? (reviewMap[shareCode] || null) : null
 
   const visibleMissingFields = useMemo(() => {
     if (!item?.missingFields) return []
     return item.missingFields.filter(f => !HIDDEN_MISSING.includes(f))
   }, [item])
+
+  const hasBusinessInfo = useMemo((): Consultation | null => {
+    if (!item) return null
+    if (!item.shareCode) return null
+    return item as Consultation
+  }, [item])
+
+  const handleSetReview = (status: ReviewStatus) => {
+    if (!shareCode) return
+    const next = { ...reviewMap, [shareCode]: status }
+    setReviewMap(next)
+    saveReviewStatus(next)
+    const opt = REVIEW_OPTIONS.find(o => o.key === status)
+    Taro.showToast({ title: `已标记：${opt?.label || status}`, icon: 'none', duration: 1500 })
+  }
 
   const handlePreviewPhoto = (idx: number) => {
     if (!item?.photos) return
@@ -99,18 +135,54 @@ const SharePage: React.FC = () => {
     })
   }
 
-  const handleCopyMaterial = () => {
-    if (!item) return
-    const t = item as Consultation
+  const buildCopyMaterial = (mode: 'simple' | 'full', t: Consultation): string => {
+    const businessBlock =
+`联系单编号：${t.contactNo || '（待补）'}
+图纸编号：${t.drawingNo || '（待补）'}
+责任单位：${t.responsibleUnit || '（待补）'}
+预计工程量：${t.estimatedQuantity || '（待补）'}`
+
     const photoList = t.photos && t.photos.length > 0
-      ? t.photos.map((p, i) => `  ${i + 1}. ${p.remark || '现场照片'}`).join('\n')
+      ? t.photos.map((p, i) => {
+        const remark = p.remark || '现场照片'
+        return `  ${i + 1}. ${remark}`
+      }).join('\n')
       : '  （暂无照片）'
-    const material =
-`【变更洽商联系单素材】
+
+    const missingBlock = visibleMissingFields.length > 0
+      ? `⚠️ 待补项：${visibleMissingFields.map(f => MISSING_FIELD_LABEL[f]).join('、')}`
+      : '✅ 信息完整，可整理联系单'
+
+    if (mode === 'simple') {
+      return (
+`【洽商】${t.buildingName} ${t.floorName}${t.locationText ? ' ' + t.locationText : ''}
 项目：${t.projectName}
-位置：${t.buildingName} ${t.floorName}${t.locationText ? ' ' + t.locationText : ''}
-专业：${t.professional} | 变更原因：${t.changeReason}
-创建人：${t.createdBy} | 时间：${formatDateFull(t.createdAt)}
+专业：${t.professional} / 原因：${t.changeReason}
+
+▶ 原做法：${(t.originalDrawing || '（未填写）').split('\n')[0]}
+▶ 现问题：${(t.siteProblem || '（未填写）').split('\n')[0]}
+▶ 建议：${(t.suggestedSolution || '（未填写）').split('\n')[0]}
+
+现场照片：${t.photos?.length || 0}张
+${missingBlock}
+创建人：${t.createdBy} · ${formatDateFull(t.createdAt)}
+共享码：${t.shareCode}`
+      )
+    }
+
+    return (
+`━━━━━━━━━━━━━━━━
+  变更洽商联系单（完整版）
+━━━━━━━━━━━━━━━━
+
+【基本信息】
+项目名称：${t.projectName}
+现场位置：${t.buildingName} ${t.floorName}${t.locationText ? ' ' + t.locationText : ''}
+所属专业：${t.professional}
+变更原因：${t.changeReason}
+
+【业务信息】
+${businessBlock}
 
 【原图纸做法】
 ${t.originalDrawing || '（未填写）'}
@@ -124,14 +196,24 @@ ${t.suggestedSolution || '（未填写）'}
 【现场照片清单】
 ${photoList}
 
-${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.map(f => MISSING_FIELD_LABEL[f]).join('、')}` : ''}
-共享码：${t.shareCode}`
+【说明】
+${missingBlock}
 
+创建人：${t.createdBy}
+创建时间：${formatDateFull(t.createdAt)}
+共享码：${t.shareCode}
+━━━━━━━━━━━━━━━━`
+    )
+  }
+
+  const handleCopy = (mode: 'simple' | 'full') => {
+    if (!hasBusinessInfo) return
+    const text = buildCopyMaterial(mode, hasBusinessInfo)
     Taro.setClipboardData({
-      data: material,
+      data: text,
       success: () => {
-        Taro.showToast({ title: '联系单素材已复制', icon: 'success', duration: 2000 })
-        console.log('[SharePage] 复制联系单素材成功')
+        Taro.showToast({ title: mode === 'simple' ? '简版已复制（微信用）' : '完整版已复制（文档用）', icon: 'success', duration: 2000 })
+        setShowCopyMenu(false)
       }
     })
   }
@@ -141,7 +223,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
       Taro.showToast({ title: '请输入共享码', icon: 'none' })
       return
     }
-    console.log('[SharePage] 手动查询:', manualCode.trim().toUpperCase())
     setSearchTrigger(t => t + 1)
   }
 
@@ -175,7 +256,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
             请在下方输入 8 位共享码，或点击现场二维码自动识别
           </Text>
         </View>
-
         <View className={styles.mainCard}>
           <View className={styles.codeInputSection}>
             <Input
@@ -192,7 +272,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
             </Button>
           </View>
         </View>
-
         <View className={styles.footerTip}>
           共享码由现场施工员在「洽商详情」页生成，{'\n'}
           资料员、预算员扫码或输入共享码即可查看同一条洽商的照片和说明。
@@ -211,7 +290,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
             可能共享码输入错误，或该条洽商尚未同步到此设备
           </Text>
         </View>
-
         <View className={styles.notFoundWrap}>
           <View className={styles.notFoundIcon}>🔍</View>
           <Text className={styles.notFoundTitle}>未找到该洽商记录</Text>
@@ -223,7 +301,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
             </Text>
           </Text>
           <View className={styles.notFoundCode}>共享码: {shareCode}</View>
-
           <View className={styles.codeInputSection}>
             <Input
               className={styles.codeInput}
@@ -247,7 +324,6 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
               </Button>
             )}
           </View>
-
           <Button
             className={styles.searchBtn}
             style={{ backgroundColor: '#fff', color: '#1E6FFF', border: '2rpx solid #1E6FFF' }}
@@ -260,7 +336,7 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
     )
   }
 
-  if (!item) {
+  if (!hasBusinessInfo) {
     return (
       <View className={styles.pageContainer}>
         <View className={styles.loadingWrap}>
@@ -271,7 +347,8 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
     )
   }
 
-  const itemTyped = item as Consultation
+  const t = hasBusinessInfo
+  const reviewOpt = REVIEW_OPTIONS.find(o => o.key === currentReviewStatus)
 
   return (
     <ScrollView scrollY className={styles.pageContainer}>
@@ -282,19 +359,49 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
           {source === 'local-cache' && ' · 本地缓存'}
         </View>
         <Text className={styles.locationTitle}>
-          {itemTyped.buildingName} · {itemTyped.floorName}
+          {t.buildingName} · {t.floorName}
         </Text>
         <Text className={styles.projectSub}>
-          {itemTyped.projectName}
-          {itemTyped.locationText ? ` · ${itemTyped.locationText}` : ''}
+          {t.projectName}
+          {t.locationText ? ` · ${t.locationText}` : ''}
         </Text>
         <View className={styles.tagGroup}>
-          <StatusBadge status={itemTyped.status} />
-          <ProfessionalTag name={itemTyped.professional} />
-          <ReasonTag reason={itemTyped.changeReason} />
+          <StatusBadge status={t.status} />
+          <ProfessionalTag name={t.professional} />
+          <ReasonTag reason={t.changeReason} />
           <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 22 }}>
-            {formatDateFull(itemTyped.createdAt)}
+            {formatDateFull(t.createdAt)}
           </Text>
+        </View>
+      </View>
+
+      <View className={styles.reviewCard}>
+        <View className={styles.reviewTitle}>资料员核对状态</View>
+        {currentReviewStatus && reviewOpt ? (
+          <View className={styles.reviewCurrent}>
+            <Text className={styles.reviewIconCurrent} style={{ color: reviewOpt.color }}>
+              {reviewOpt.icon} {reviewOpt.label}
+            </Text>
+            <Text className={styles.reviewHint}>{reviewOpt.hint}</Text>
+          </View>
+        ) : (
+          <Text className={styles.reviewHint}>尚未标记状态</Text>
+        )}
+        <View className={styles.reviewBtnRow}>
+          {REVIEW_OPTIONS.map(opt => (
+            <Button
+              key={opt.key}
+              className={styles.reviewBtn}
+              style={{
+                backgroundColor: currentReviewStatus === opt.key ? opt.color : '#fff',
+                color: currentReviewStatus === opt.key ? '#fff' : opt.color,
+                borderColor: opt.color
+              }}
+              onClick={() => handleSetReview(opt.key)}
+            >
+              {opt.icon} {opt.label}
+            </Button>
+          ))}
         </View>
       </View>
 
@@ -320,34 +427,34 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
         <View className={styles.infoGrid}>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>创建人</View>
-            <View className={styles.infoValue}>{itemTyped.createdBy}</View>
+            <View className={styles.infoValue}>{t.createdBy}</View>
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>创建时间</View>
-            <View className={styles.infoValue}>{formatDateFull(itemTyped.createdAt)}</View>
+            <View className={styles.infoValue}>{formatDateFull(t.createdAt)}</View>
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>联系单编号</View>
-            <View className={`${styles.infoValue} ${!itemTyped.contactNo ? styles.infoMissing : ''}`}>
-              {itemTyped.contactNo || '待补'}
+            <View className={`${styles.infoValue} ${!t.contactNo ? styles.infoMissing : ''}`}>
+              {t.contactNo || '待补'}
             </View>
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>图纸编号</View>
-            <View className={`${styles.infoValue} ${!itemTyped.drawingNo ? styles.infoMissing : ''}`}>
-              {itemTyped.drawingNo || '待补'}
+            <View className={`${styles.infoValue} ${!t.drawingNo ? styles.infoMissing : ''}`}>
+              {t.drawingNo || '待补'}
             </View>
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>责任单位</View>
-            <View className={`${styles.infoValue} ${!itemTyped.responsibleUnit ? styles.infoMissing : ''}`}>
-              {itemTyped.responsibleUnit || '待补'}
+            <View className={`${styles.infoValue} ${!t.responsibleUnit ? styles.infoMissing : ''}`}>
+              {t.responsibleUnit || '待补'}
             </View>
           </View>
           <View className={styles.infoItem}>
             <View className={styles.infoLabel}>预计工程量</View>
-            <View className={`${styles.infoValue} ${!itemTyped.estimatedQuantity ? styles.infoMissing : ''}`}>
-              {itemTyped.estimatedQuantity || '待补'}
+            <View className={`${styles.infoValue} ${!t.estimatedQuantity ? styles.infoMissing : ''}`}>
+              {t.estimatedQuantity || '待补'}
             </View>
           </View>
         </View>
@@ -355,24 +462,24 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
 
       <View className={styles.sectionCard}>
         <SectionTitle title='原图纸做法' showIndicator />
-        <View className={styles.textBlockOriginal}>{itemTyped.originalDrawing || '（未填写）'}</View>
+        <View className={styles.textBlockOriginal}>{t.originalDrawing || '（未填写）'}</View>
       </View>
 
       <View className={styles.sectionCard}>
         <SectionTitle title='现场问题' showIndicator />
-        <View className={styles.textBlockProblem}>{itemTyped.siteProblem || '（未填写）'}</View>
+        <View className={styles.textBlockProblem}>{t.siteProblem || '（未填写）'}</View>
       </View>
 
       <View className={styles.sectionCard}>
         <SectionTitle title='建议做法' showIndicator />
-        <View className={styles.textBlockSolution}>{itemTyped.suggestedSolution || '（未填写）'}</View>
+        <View className={styles.textBlockSolution}>{t.suggestedSolution || '（未填写）'}</View>
       </View>
 
       <View className={styles.sectionCard}>
-        <SectionTitle title='现场照片' subtitle={`共${itemTyped.photos?.length || 0}张`} showIndicator />
-        {itemTyped.photos && itemTyped.photos.length > 0 ? (
+        <SectionTitle title='现场照片' subtitle={`共${t.photos?.length || 0}张`} showIndicator />
+        {t.photos && t.photos.length > 0 ? (
           <View className={styles.photoGrid}>
-            {itemTyped.photos.map((p, i) => (
+            {t.photos.map((p, i) => (
               <View className={styles.photoItem} key={p.id} onClick={() => handlePreviewPhoto(i)}>
                 <Image
                   className={styles.photoImage}
@@ -392,15 +499,33 @@ ${visibleMissingFields.length > 0 ? `⚠️ 待补项：${visibleMissingFields.m
       </View>
 
       <View className={styles.actionBar}>
-        <Button className={styles.copyMaterialBtn} onClick={handleCopyMaterial}>
-          📋 一键复制联系单素材
-        </Button>
+        {showCopyMenu ? (
+          <View className={styles.copyMenu}>
+            <Button className={styles.copyMenuBtnSimple} onClick={() => handleCopy('simple')}>
+              💬 简版（微信发群里）
+            </Button>
+            <Text className={styles.copyMenuHint}>紧凑格式 · 适合粘贴到微信群、钉钉等</Text>
+            <Button className={styles.copyMenuBtnFull} onClick={() => handleCopy('full')}>
+              📄 完整版（粘文档）
+            </Button>
+            <Text className={styles.copyMenuHint}>详细格式 · 适合粘贴到Word联系单文档</Text>
+            <Button className={styles.copyMenuCancel} onClick={() => setShowCopyMenu(false)}>
+              取消
+            </Button>
+          </View>
+        ) : (
+          <Button className={styles.copyMaterialBtn} onClick={() => setShowCopyMenu(true)}>
+            📋 复制联系单素材
+          </Button>
+        )}
       </View>
 
       <View className={styles.footerTip}>
-        洽商共享由 {itemTyped.createdBy} 发起，共享码 {itemTyped.shareCode}
+        洽商共享由 {t.createdBy} 发起，共享码 {t.shareCode}
         {'\n'}
         {source === 'url-data' ? '本页面内容直接从链接解析，不依赖设备缓存' : '本页面内容从当前设备缓存读取'}
+        {'\n'}
+        {reviewOpt ? `当前核对：${reviewOpt.label}（仅本设备记录）` : '点击上方按钮标记资料员核对状态'}
         {'\n'}
         本页为只读查看，如需修改请联系施工员在 App 内操作
       </View>

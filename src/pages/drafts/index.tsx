@@ -3,12 +3,47 @@ import { View, Text, Button, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import styles from './index.module.scss'
 import { useConsultation } from '@/store/consultationContext'
-import { MissingField, MISSING_FIELD_LABEL } from '@/types/consultation'
+import { MissingField, MISSING_FIELD_LABEL, Consultation } from '@/types/consultation'
 import DraftCard from '@/components/DraftCard'
 import EmptyState from '@/components/EmptyState'
 import classNames from 'classnames'
 
 type FilterKey = MissingField | 'all'
+type ViewMode = 'single' | 'combo'
+
+type ComboKey =
+  | 'all'
+  | 'only-photos'
+  | 'only-quantity'
+  | 'only-responsibility'
+  | 'nos-drawing'
+  | 'business-only'
+  | 'no-photos-others-done'
+  | 'full-missing'
+  | 'mixed'
+
+interface ComboDef {
+  key: ComboKey
+  label: string
+  icon: string
+  match: (c: Consultation) => boolean
+}
+
+const COMBO_DEFS: ComboDef[] = [
+  { key: 'all', label: '全部草稿', icon: '📋', match: () => true },
+  { key: 'only-photos', label: '只缺照片', icon: '📷', match: (c) => c.missingFields.length === 1 && c.missingFields.includes('photos') },
+  { key: 'no-photos-others-done', label: '缺照片+至少1业务', icon: '📷+📋', match: (c) => c.missingFields.includes('photos') && c.missingFields.length > 1 },
+  { key: 'business-only', label: '只缺业务项', icon: '📋', match: (c) => !c.missingFields.includes('photos') && c.missingFields.length > 0 },
+  { key: 'nos-drawing', label: '缺编号+图纸', icon: '📋📐', match: (c) => c.missingFields.includes('contactNo') && c.missingFields.includes('drawingNo') },
+  { key: 'only-quantity', label: '只缺工程量', icon: '📊', match: (c) => c.missingFields.length === 1 && c.missingFields.includes('estimatedQuantity') },
+  { key: 'only-responsibility', label: '只缺责任单位', icon: '🏢', match: (c) => c.missingFields.length === 1 && c.missingFields.includes('responsibleUnit') },
+  { key: 'full-missing', label: '全缺(≥4项)', icon: '⚠️', match: (c) => c.missingFields.length >= 4 },
+  { key: 'mixed', label: '其他组合', icon: '🧩', match: (c) => {
+    if (c.missingFields.length === 0) return false
+    if (COMBO_DEFS.slice(1, -1).some(d => d.key !== 'mixed' && d.match(c))) return false
+    return true
+  }}
+]
 
 const FILTER_TABS: Array<{ key: FilterKey; label: string; icon: string }> = [
   { key: 'all', label: '全部缺项', icon: '⚠️' },
@@ -30,6 +65,8 @@ const ICONS: Record<MissingField, string> = {
 const DraftsPage: React.FC = () => {
   const { state, dispatch } = useConsultation()
   const [activeFilter, setActiveFilter] = React.useState<FilterKey>('all')
+  const [activeCombo, setActiveCombo] = React.useState<ComboKey>('all')
+  const [viewMode, setViewMode] = React.useState<ViewMode>('single')
   const [refreshing, setRefreshing] = React.useState(false)
 
   useDidShow(() => {
@@ -75,19 +112,43 @@ const DraftsPage: React.FC = () => {
       }
     })
     return counts
-  }, [draftList, missingStats])
+  }, [draftList])
+
+  const comboCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    COMBO_DEFS.forEach(d => {
+      counts[d.key] = draftList.filter(c => d.match(c)).length
+    })
+    return counts
+  }, [draftList])
 
   const filteredList = useMemo(() => {
-    if (activeFilter === 'all') return draftList
-    return draftList.filter(c => c.missingFields.includes(activeFilter))
-  }, [draftList, activeFilter])
+    if (viewMode === 'single') {
+      if (activeFilter === 'all') return draftList
+      return draftList.filter(c => c.missingFields.includes(activeFilter))
+    }
+    const def = COMBO_DEFS.find(d => d.key === activeCombo)
+    if (!def || def.key === 'all') return draftList
+    return draftList.filter(c => def.match(c))
+  }, [draftList, activeFilter, activeCombo, viewMode])
 
   const handleFilter = (key: FilterKey) => {
+    setViewMode('single')
     setActiveFilter(key)
     if (key !== 'all') {
       dispatch({ type: 'SET_MISSING_FILTER', payload: key })
     }
-    console.log('[DraftsPage] 缺项筛选:', { key })
+  }
+
+  const handleCombo = (key: ComboKey) => {
+    setViewMode('combo')
+    setActiveCombo(key)
+  }
+
+  const handleSwitchMode = (m: ViewMode) => {
+    setViewMode(m)
+    if (m === 'single') setActiveFilter('all')
+    else setActiveCombo('all')
   }
 
   const handleNotifyAll = () => {
@@ -152,8 +213,25 @@ const DraftsPage: React.FC = () => {
         </View>
       )}
 
+      {draftList.length > 0 && (
+        <View className={styles.modeSwitch}>
+          <Button
+            className={viewMode === 'single' ? styles.modeBtnActive : styles.modeBtn}
+            onClick={() => handleSwitchMode('single')}
+          >
+            按单一缺项
+          </Button>
+          <Button
+            className={viewMode === 'combo' ? styles.modeBtnActive : styles.modeBtn}
+            onClick={() => handleSwitchMode('combo')}
+          >
+            按缺项组合
+          </Button>
+        </View>
+      )}
+
       <View className={styles.filterTabBar}>
-        {FILTER_TABS.map(tab => {
+        {viewMode === 'single' && FILTER_TABS.map(tab => {
           const active = activeFilter === tab.key
           const count = filterCounts[tab.key] || 0
           return (
@@ -162,7 +240,21 @@ const DraftsPage: React.FC = () => {
               className={active ? styles.filterTabActive : styles.filterTab}
               onClick={() => handleFilter(tab.key)}
             >
-              {tab.label}
+              {tab.icon} {tab.label}
+              <View className={styles.tabCount}>{count}</View>
+            </Button>
+          )
+        })}
+        {viewMode === 'combo' && COMBO_DEFS.map(def => {
+          const active = activeCombo === def.key
+          const count = comboCounts[def.key] || 0
+          return (
+            <Button
+              key={def.key}
+              className={active ? styles.filterTabActive : styles.filterTab}
+              onClick={() => handleCombo(def.key)}
+            >
+              {def.label}
               <View className={styles.tabCount}>{count}</View>
             </Button>
           )
@@ -172,9 +264,14 @@ const DraftsPage: React.FC = () => {
       <View className={styles.listArea}>
         <View className={styles.summaryBar}>
           <Text className={styles.summaryText}>
-            {activeFilter === 'all'
-              ? '全部草稿记录'
-              : MISSING_FIELD_LABEL[activeFilter as MissingField] + '缺项记录'}
+            {viewMode === 'single'
+              ? activeFilter === 'all'
+                ? '全部草稿记录'
+                : MISSING_FIELD_LABEL[activeFilter as MissingField] + '缺项记录'
+              : activeCombo === 'all'
+                ? '全部草稿（按组合）'
+                : COMBO_DEFS.find(d => d.key === activeCombo)?.label
+            }
           </Text>
           <Text className={styles.summaryText}>
             共 <Text className={styles.summaryCount}>{filteredList.length}</Text> 条
@@ -187,19 +284,15 @@ const DraftsPage: React.FC = () => {
           <EmptyState
             icon='✅'
             title={
-              activeFilter === 'all'
-                ? '没有待完善记录'
-                : `没有缺${MISSING_FIELD_LABEL[activeFilter as MissingField]}的记录`
+              viewMode === 'single'
+                ? activeFilter === 'all' ? '没有待完善记录' : `没有缺${MISSING_FIELD_LABEL[activeFilter as MissingField]}的记录`
+                : activeCombo === 'all' ? '没有待完善记录' : `${COMBO_DEFS.find(d => d.key === activeCombo)?.label}的记录都处理好啦`
             }
-            description={
-              activeFilter === 'all'
-                ? '所有洽商都已补全完善，继续保持！有新洽商可以新建记录。'
-                : '该字段的草稿都已经补全啦，可以切换其他缺项类型查看。'
-            }
-            actionText={activeFilter === 'all' ? '+ 新建洽商' : undefined}
-            onAction={handleNewConsult}
-            secondaryActionText={activeFilter !== 'all' ? '查看全部草稿' : undefined}
-            onSecondaryAction={() => setActiveFilter('all')}
+            description='可以切换其他分组继续处理'
+            actionText={viewMode === 'single' && activeFilter === 'all' ? '+ 新建洽商' : '查看全部草稿'}
+            onAction={() => viewMode === 'single' && activeFilter === 'all' ? handleNewConsult() : handleSwitchMode(viewMode === 'single' ? 'combo' : 'single')}
+            secondaryActionText='回到首页'
+            onSecondaryAction={() => Taro.switchTab({ url: '/pages/index/index' })}
           />
         )}
       </View>

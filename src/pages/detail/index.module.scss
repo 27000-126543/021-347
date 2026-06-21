@@ -161,9 +161,228 @@
 }
 
 .textBlockSolution {
-  @extend .textBlock;
   border-left: 6rpx solid $color-success;
   background-color: $color-success-bg;
+}
+
+.modalMask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalContainer {
+  width: 100%;
+  max-width: 750rpx;
+  max-height: 88vh;
+  background-color: $color-bg-page;
+  border-top-left-radius: $radius-lg;
+  border-top-right-radius: $radius-lg;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  background-color: #fff;
+  border-bottom: 1rpx solid $color-border;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  @include button-reset;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background-color: $color-bg-section;
+  color: $color-text-tertiary;
+  font-size: 40rpx;
+  line-height: 1;
+  @include flex-center;
+}
+
+.modalBody {
+  flex: 1;
+  padding: $spacing-md $page-padding;
+  overflow: hidden;
+}
+
+.modalFooter {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background-color: #fff;
+  border-top: 1rpx solid $color-border;
+  flex-shrink: 0;
+}
+
+.modalSecondaryBtn,
+.modalPrimaryBtn {
+  @include button-reset;
+  @include flex-center;
+  flex: 1;
+  height: 88rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.modalSecondaryBtn {
+  background-color: $color-bg-section;
+  color: $color-text-primary;
+  border: 2rpx solid $color-border;
+}
+
+.modalPrimaryBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+}
+
+.shareFieldList {
+  background-color: #fff;
+  border-radius: $radius-md;
+  padding: 4rpx $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.shareFieldItem {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.shareFieldIcon {
+  width: 40rpx;
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.shareFieldText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.shareFieldValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-success;
+
+  &:not(.shareFieldValue) {
+    color: $color-text-tertiary;
+  }
+}
+
+.shareMissingBlock {
+  background-color: $color-missing-bg;
+  border: 2rpx solid $color-missing;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.shareMissingTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-missing;
+  margin-bottom: $spacing-sm;
+}
+
+.shareMissingList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.shareMissingTag {
+  padding: 4rpx 16rpx;
+  background-color: #fff;
+  border: 1rpx solid $color-missing;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  color: $color-missing;
+  font-weight: $font-weight-medium;
+}
+
+.shareMissingDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.shareUrlTip {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-sm;
+}
+
+.shareUrlPreview {
+  background-color: #fff;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  font-family: Menlo, Consolas, monospace;
+  word-break: break-all;
+  line-height: 1.5;
+  margin-bottom: $spacing-md;
+  max-height: 180rpx;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60rpx;
+    background: linear-gradient(180deg, transparent 0%, #fff 100%);
+  }
+}
+
+.sharePhotoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.sharePhotoItem {
+  width: calc((100% - 16rpx) / 3);
+  aspect-ratio: 4/3;
+  border-radius: $radius-sm;
+  background-color: $color-bg-section;
 }
 
 .noPhotoWarning {

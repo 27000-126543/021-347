@@ -83,6 +83,10 @@ export const buildSharePayload = (item: Consultation): SharePayload => {
     lt: item.locationText,
     by: item.createdBy,
     ct: item.createdAt,
+    cn: item.contactNo || '',
+    dn: item.drawingNo || '',
+    ru: item.responsibleUnit || '',
+    eq: item.estimatedQuantity || '',
     mf: item.missingFields
   }
 }
@@ -107,10 +111,10 @@ export const restoreFromSharePayload = (payload: SharePayload): Partial<Consulta
       uploadedAt: payload.ct
     })),
     locationText: payload.lt,
-    contactNo: '',
-    drawingNo: '',
-    responsibleUnit: '',
-    estimatedQuantity: '',
+    contactNo: payload.cn || '',
+    drawingNo: payload.dn || '',
+    responsibleUnit: payload.ru || '',
+    estimatedQuantity: payload.eq || '',
     createdBy: payload.by,
     createdAt: payload.ct,
     status: 'submitted',
