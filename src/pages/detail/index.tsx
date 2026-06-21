@@ -66,8 +66,7 @@ const DetailPage: React.FC = () => {
   }, [item, editMode, editContactNo, editDrawingNo, editResponsibleUnit, editEstimatedQty, editLocation])
 
   const isMissing = (f: MissingField) => missingFields.includes(f)
-  const noPhoto = item.photos.length === 0
-  const missingTotal = missingFields.length + (noPhoto ? 1 : 0)
+  const missingTotal = missingFields.length
 
   const handlePreviewPhoto = (idx: number) => {
     Taro.previewImage({
@@ -77,7 +76,7 @@ const DetailPage: React.FC = () => {
   }
 
   const handleCopyShare = () => {
-    const url = buildShareUrl(item.shareCode)
+    const url = buildShareUrl(item)
     const summary =
 `【洽商记录分享】
 编号: ${item.contactNo || '（待补）'}
@@ -100,14 +99,14 @@ const DetailPage: React.FC = () => {
   const handleShowQR = () => {
     Taro.showModal({
       title: '共享二维码',
-      content: `请让资料员或预算员扫描下方二维码，或输入共享码：${item.shareCode}\n\n链接：${buildShareUrl(item.shareCode)}`,
+      content: `请让资料员或预算员扫描下方二维码，或输入共享码：${item.shareCode}\n\n链接：${buildShareUrl(item)}`,
       confirmText: '复制链接',
       cancelText: '知道了',
       confirmColor: '#1E6FFF',
       success: (res) => {
         if (res.confirm) {
           Taro.setClipboardData({
-            data: buildShareUrl(item.shareCode),
+            data: buildShareUrl(item),
             success: () => Taro.showToast({ title: '链接已复制', icon: 'success' })
           })
         }
@@ -182,7 +181,6 @@ const DetailPage: React.FC = () => {
               )}
             </View>
             <View className={styles.missingFields}>
-              {noPhoto && <View className={styles.missingField}>缺现场照片</View>}
               {missingFields.map(f => (
                 <View className={styles.missingField} key={f}>
                   缺{MISSING_FIELD_LABEL[f]}
@@ -230,9 +228,9 @@ const DetailPage: React.FC = () => {
       <View className={styles.sectionCard}>
         <SectionTitle
           title='现场照片'
-          subtitle={noPhoto ? '尚未采集' : `共${item.photos.length}张`}
+          subtitle={isMissing('photos') ? '尚未采集' : `共${item.photos.length}张`}
           showIndicator
-          missingCount={noPhoto ? 1 : undefined}
+          missingCount={isMissing('photos') ? undefined : undefined}
         />
         {item.photos.length > 0 ? (
           <View className={styles.photoGrid}>

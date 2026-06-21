@@ -99,7 +99,6 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const calcActualStatus = useCallback((form: ConsultationFormData): ConsultationStatus => {
-    if (!form.photos || form.photos.length === 0) return 'draft'
     if (getMissingFields(form).length > 0) return 'draft'
     return 'submitted'
   }, [])

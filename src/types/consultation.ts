@@ -19,6 +19,7 @@ export type ChangeReason =
   | '其他'
 
 export type MissingField =
+  | 'photos'
   | 'contactNo'
   | 'drawingNo'
   | 'responsibleUnit'
@@ -29,6 +30,22 @@ export interface ConsultationPhoto {
   url: string
   remark?: string
   uploadedAt: string
+}
+
+export interface SharePayload {
+  sc: string
+  pn: string
+  bn: string
+  fn: string
+  pf: ConsultationProfessional
+  cr: ChangeReason
+  od: string
+  sp: string
+  sl: string
+  ph: Array<{ u: string; r?: string }>
+  lt?: string
+  by: string
+  ct: string
 }
 
 export interface Consultation {
@@ -99,6 +116,7 @@ export const STATUS_LABEL: Record<ConsultationStatus, string> = {
 }
 
 export const MISSING_FIELD_LABEL: Record<MissingField, string> = {
+  photos: '现场照片',
   contactNo: '联系单编号',
   drawingNo: '图纸编号',
   responsibleUnit: '责任单位',
