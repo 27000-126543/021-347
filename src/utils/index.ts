@@ -61,5 +61,5 @@ export const truncateText = (text: string, maxLen: number): string => {
 }
 
 export const buildShareUrl = (shareCode: string): string => {
-  return `https://qs.example.com/s/${shareCode}`
+  return `/pages/share/index?shareCode=${shareCode.toUpperCase()}`
 }

@@ -128,6 +128,7 @@ const CreatePage: React.FC = () => {
     if (!confirmSteps.original) return '请先确认【原图纸做法】内容'
     if (!confirmSteps.problem) return '请先确认【现场问题】内容'
     if (!confirmSteps.solution) return '请先确认【建议做法】内容'
+    if (form.photos.length === 0) return '请至少拍摄或选择1张现场照片，无照片记录不予提交'
     return null
   }
 
@@ -145,12 +146,14 @@ const CreatePage: React.FC = () => {
       ? saveDraft(form, '张工长', editId)
       : saveDraft(form, '张工长')
     console.log('[CreatePage] 保存草稿成功:', result.id, '缺项:', result.missingFields)
+    const noPhoto = form.photos.length === 0
+    const missingTotal = missingFields.length + (noPhoto ? 1 : 0)
     Taro.showToast({
-      title: missingFields.length > 0
-        ? `草稿已保存 · 缺${missingFields.length}项`
+      title: missingTotal > 0
+        ? `草稿已保存 · 缺${missingTotal}项${noPhoto ? '(含照片)' : ''}`
         : '草稿已保存',
       icon: 'none',
-      duration: 1800
+      duration: 2000
     })
     setTimeout(() => Taro.navigateBack(), 900)
   }
@@ -298,8 +301,9 @@ const CreatePage: React.FC = () => {
             photos={form.photos}
             onChange={handlePhotosChange}
             maxCount={9}
-            required={false}
+            required={true}
             title=''
+            tip='提交洽商记录必须至少1张现场照片；仅保存草稿可暂空，后续补上再提交。建议从整体到局部拍摄，标注关键尺寸或冲突点。'
           />
         </View>
 

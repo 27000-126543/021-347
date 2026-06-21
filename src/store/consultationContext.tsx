@@ -1,7 +1,34 @@
-import React, { createContext, useContext, useReducer, ReactNode, useCallback } from 'react'
+import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect } from 'react'
+import Taro from '@tarojs/taro'
 import { Consultation, ConsultationFormData, ConsultationStatus, MissingField } from '@/types/consultation'
 import { mockConsultations } from '@/data/mockConsultations'
 import { generateId, generateShareCode, getMissingFields } from '@/utils'
+
+const STORAGE_KEY = 'consultation_records_v1'
+
+const loadPersistedConsultations = (): Consultation[] => {
+  try {
+    const raw = Taro.getStorageSync(STORAGE_KEY)
+    if (raw && typeof raw === 'string' && raw.length > 0) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log('[Consultation] 从本地存储加载记录:', parsed.length, '条')
+        return parsed
+      }
+    }
+  } catch (e) {
+    console.warn('[Consultation] 读取本地存储失败，使用示例数据', e)
+  }
+  return mockConsultations
+}
+
+const persistConsultations = (list: Consultation[]) => {
+  try {
+    Taro.setStorageSync(STORAGE_KEY, JSON.stringify(list))
+  } catch (e) {
+    console.warn('[Consultation] 写入本地存储失败', e)
+  }
+}
 
 interface ConsultationState {
   consultations: Consultation[]
@@ -19,7 +46,7 @@ type Action =
   | { type: 'DELETE_CONSULTATION'; payload: string }
 
 const initialState: ConsultationState = {
-  consultations: mockConsultations,
+  consultations: loadPersistedConsultations(),
   filterStatus: 'all',
   searchKeyword: '',
   missingFilter: 'all'
@@ -63,12 +90,19 @@ interface ConsultationContextType {
   saveDraft: (form: ConsultationFormData, createdBy: string, existingId?: string) => Consultation
   updateFromDetail: (id: string, updates: Partial<ConsultationFormData>) => Consultation | null
   getById: (id: string) => Consultation | undefined
+  getByShareCode: (shareCode: string) => Consultation | undefined
 }
 
 const ConsultationContext = createContext<ConsultationContextType | undefined>(undefined)
 
 export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState)
+
+  const calcActualStatus = useCallback((form: ConsultationFormData): ConsultationStatus => {
+    if (!form.photos || form.photos.length === 0) return 'draft'
+    if (getMissingFields(form).length > 0) return 'draft'
+    return 'submitted'
+  }, [])
 
   const buildConsultation = useCallback(
     (
@@ -77,7 +111,9 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
       status: ConsultationStatus,
       existingId?: string
     ): Consultation => {
-      const missing = status === 'draft' ? getMissingFields(form) : []
+      const actualStatus: ConsultationStatus =
+        status === 'submitted' ? calcActualStatus(form) : 'draft'
+      const missing = actualStatus === 'draft' ? getMissingFields(form) : []
       const now = new Date().toISOString()
 
       if (existingId) {
@@ -85,8 +121,8 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
         return {
           ...existing!,
           ...form,
-          status,
-          missingFields: status === 'draft' ? missing : [],
+          status: actualStatus,
+          missingFields: missing,
           updatedAt: now
         }
       }
@@ -94,7 +130,7 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return {
         id: generateId(),
         ...form,
-        status,
+        status: actualStatus,
         createdAt: now,
         updatedAt: now,
         createdBy,
@@ -102,18 +138,18 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
         shareCode: generateShareCode()
       }
     },
-    [state.consultations]
+    [state.consultations, calcActualStatus]
   )
 
   const createConsultation = useCallback(
     (form: ConsultationFormData, createdBy: string): Consultation => {
-      const status: ConsultationStatus = getMissingFields(form).length === 0 ? 'submitted' : 'draft'
+      const status = calcActualStatus(form)
       const consultation = buildConsultation(form, createdBy, status)
       dispatch({ type: 'ADD_CONSULTATION', payload: consultation })
       console.log('[Consultation] 创建洽商记录:', { id: consultation.id, status })
       return consultation
     },
-    [buildConsultation]
+    [buildConsultation, calcActualStatus]
   )
 
   const submitConsultation = useCallback(
@@ -170,7 +206,7 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
         ...updates
       }
       const missing = getMissingFields(mergedForm)
-      const newStatus: ConsultationStatus = missing.length === 0 ? 'submitted' : 'draft'
+      const newStatus: ConsultationStatus = calcActualStatus(mergedForm)
       const updated: Consultation = {
         ...existing,
         ...mergedForm,
@@ -182,7 +218,7 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
       console.log('[Consultation] 从详情页更新:', { id, newStatus, missing })
       return updated
     },
-    [state.consultations]
+    [state.consultations, calcActualStatus]
   )
 
   const getById = useCallback(
@@ -191,6 +227,20 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
     },
     [state.consultations]
   )
+
+  const getByShareCode = useCallback(
+    (shareCode: string): Consultation | undefined => {
+      if (!shareCode) return undefined
+      const normalized = shareCode.trim().toUpperCase()
+      return state.consultations.find(c => c.shareCode.toUpperCase() === normalized)
+    },
+    [state.consultations]
+  )
+
+  useEffect(() => {
+    persistConsultations(state.consultations)
+    console.log('[Consultation] 已持久化到本地存储:', state.consultations.length, '条')
+  }, [state.consultations])
 
   return (
     <ConsultationContext.Provider
@@ -201,7 +251,8 @@ export const ConsultationProvider: React.FC<{ children: ReactNode }> = ({ childr
         submitConsultation,
         saveDraft,
         updateFromDetail,
-        getById
+        getById,
+        getByShareCode
       }}
     >
       {children}

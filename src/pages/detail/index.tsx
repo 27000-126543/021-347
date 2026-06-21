@@ -66,6 +66,8 @@ const DetailPage: React.FC = () => {
   }, [item, editMode, editContactNo, editDrawingNo, editResponsibleUnit, editEstimatedQty, editLocation])
 
   const isMissing = (f: MissingField) => missingFields.includes(f)
+  const noPhoto = item.photos.length === 0
+  const missingTotal = missingFields.length + (noPhoto ? 1 : 0)
 
   const handlePreviewPhoto = (idx: number) => {
     Taro.previewImage({
@@ -166,12 +168,12 @@ const DetailPage: React.FC = () => {
       </View>
 
       <View className={styles.mainCard}>
-        {missingFields.length > 0 && (
+        {missingTotal > 0 && (
           <View className={styles.missingSection}>
             <View className={styles.missingHeader}>
               <View className={styles.missingTitle}>
                 <View className={styles.missingIcon}>!</View>
-                还缺{missingFields.length}项需要补全
+                还缺{missingTotal}项需要补全
               </View>
               {!editMode && (
                 <Text className={styles.completeLink} onClick={() => setEditMode(true)}>
@@ -180,6 +182,7 @@ const DetailPage: React.FC = () => {
               )}
             </View>
             <View className={styles.missingFields}>
+              {noPhoto && <View className={styles.missingField}>缺现场照片</View>}
               {missingFields.map(f => (
                 <View className={styles.missingField} key={f}>
                   缺{MISSING_FIELD_LABEL[f]}
@@ -225,7 +228,12 @@ const DetailPage: React.FC = () => {
       </View>
 
       <View className={styles.sectionCard}>
-        <SectionTitle title='现场照片' subtitle={`共${item.photos.length}张`} showIndicator />
+        <SectionTitle
+          title='现场照片'
+          subtitle={noPhoto ? '尚未采集' : `共${item.photos.length}张`}
+          showIndicator
+          missingCount={noPhoto ? 1 : undefined}
+        />
         {item.photos.length > 0 ? (
           <View className={styles.photoGrid}>
             {item.photos.map((p, i) => (
@@ -250,7 +258,31 @@ const DetailPage: React.FC = () => {
             )}
           </View>
         ) : (
-          <Text style={{ fontSize: 24, color: '#86909C' }}>暂无照片</Text>
+          <View className={styles.noPhotoWarning}>
+            <View className={styles.noPhotoIcon}>📷</View>
+            <View className={styles.noPhotoContent}>
+              <Text className={styles.noPhotoTitle}>尚未采集现场照片</Text>
+              <Text className={styles.noPhotoDesc}>
+                没有现场照片的洽商记录无法提交，请立即补拍或从相册选择至少1张现场照片。
+              </Text>
+            </View>
+            {!editMode ? (
+              <Button
+                className={styles.noPhotoBtn}
+                onClick={() => setEditMode(true)}
+              >
+                📷 立即补拍
+              </Button>
+            ) : (
+              <PhotoUploader
+                photos={item.photos}
+                onChange={handlePhotosChange}
+                maxCount={9}
+                title=''
+                tip='至少补拍1张现场照片后才能提交'
+              />
+            )}
+          </View>
         )}
       </View>
 
@@ -403,7 +435,7 @@ const DetailPage: React.FC = () => {
               取消编辑
             </Button>
             <Button className={styles.primaryBtn} onClick={handleSaveEdits}>
-              {missingFields.length > 0 ? `还缺${missingFields.length}项，保存` : '✓ 保存并提交'}
+              {missingTotal > 0 ? `还缺${missingTotal}项，保存` : '✓ 保存并提交'}
             </Button>
           </>
         ) : (
@@ -414,14 +446,14 @@ const DetailPage: React.FC = () => {
             <Button
               className={styles.primaryBtn}
               onClick={() => {
-                if (missingFields.length > 0) {
+                if (missingTotal > 0) {
                   setEditMode(true)
                 } else {
                   handleCopyShare()
                 }
               }}
             >
-              {missingFields.length > 0 ? `补全${missingFields.length}项缺项` : '📨 共享给资料员'}
+              {missingTotal > 0 ? `补全${missingTotal}项缺项` : '📨 共享给资料员'}
             </Button>
           </>
         )}

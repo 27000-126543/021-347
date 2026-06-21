@@ -1,0 +1,255 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 40rpx $page-padding 60rpx $page-padding;
+  position: relative;
+}
+
+.shareBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  border-radius: $radius-round;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: $font-size-xs;
+  margin-bottom: 16rpx;
+}
+
+.locationTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1.2;
+  margin-bottom: 12rpx;
+}
+
+.projectSub {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.tagGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.mainCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: -40rpx $page-padding $spacing-md $page-padding;
+  box-shadow: $shadow-float;
+  position: relative;
+  z-index: 2;
+}
+
+.infoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.infoItem {
+  flex: 1 0 calc(50% - #{$spacing-md});
+  min-width: 0;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 6rpx;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  word-break: break-all;
+}
+
+.sectionCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md $page-padding;
+  box-shadow: $shadow-card;
+}
+
+.textBlockOriginal,
+.textBlockProblem,
+.textBlockSolution {
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  line-height: 1.7;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.textBlockOriginal {
+  border-left: 6rpx solid $color-text-tertiary;
+  background-color: $color-bg-section;
+}
+
+.textBlockProblem {
+  border-left: 6rpx solid $color-accent;
+  background-color: $color-accent-bg;
+}
+
+.textBlockSolution {
+  border-left: 6rpx solid $color-success;
+  background-color: $color-success-bg;
+}
+
+.photoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.photoItem {
+  width: calc((100% - 24rpx) / 3);
+  aspect-ratio: 4 / 3;
+  border-radius: $radius-md;
+  overflow: hidden;
+  position: relative;
+  background-color: $color-bg-section;
+}
+
+.photoImage {
+  width: 100%;
+  height: 100%;
+}
+
+.photoRemark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8rpx 12rpx;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%);
+  color: #fff;
+  font-size: $font-size-xs;
+  @include text-ellipsis;
+}
+
+.notFoundWrap {
+  padding: 120rpx $page-padding;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-lg;
+  text-align: center;
+}
+
+.notFoundIcon {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: $radius-round;
+  background-color: $color-error-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80rpx;
+}
+
+.notFoundTitle {
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.notFoundDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.7;
+  max-width: 560rpx;
+}
+
+.notFoundCode {
+  margin-top: $spacing-sm;
+  padding: 12rpx 24rpx;
+  background-color: $color-bg-section;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  letter-spacing: 2rpx;
+  font-family: Menlo, Consolas, monospace;
+}
+
+.codeInputSection {
+  margin-top: $spacing-md;
+  width: 100%;
+  max-width: 560rpx;
+}
+
+.codeInput {
+  width: 100%;
+  height: 88rpx;
+  background-color: $color-bg-card;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  box-sizing: border-box;
+  margin-bottom: $spacing-md;
+  text-align: center;
+  letter-spacing: 4rpx;
+  font-family: Menlo, Consolas, monospace;
+}
+
+.searchBtn {
+  @include button-reset;
+  @include flex-center;
+  width: 100%;
+  height: 88rpx;
+  border-radius: $radius-button;
+  background-color: $color-primary;
+  color: #fff;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.loadingWrap {
+  padding: 160rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.loadingSpinner {
+  width: 64rpx;
+  height: 64rpx;
+  border: 4rpx solid $color-primary-bg;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.footerTip {
+  padding: $spacing-lg $page-padding;
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+}

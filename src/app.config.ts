@@ -4,7 +4,8 @@ export default defineAppConfig({
     'pages/drafts/index',
     'pages/mine/index',
     'pages/create/index',
-    'pages/detail/index'
+    'pages/detail/index',
+    'pages/share/index'
   ],
   window: {
     backgroundTextStyle: 'light',
